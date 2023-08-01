@@ -1,0 +1,34 @@
+{%include 'header.html'%}
+<section class="admin_approval_container" >
+    <div class="book_aproval_table-container">
+            <div class="table-row">
+              <div class="table-header">Name</div>
+              <div class="table-header">Name of reserved Book</div>
+              <div class="table-header">Approve Request</div>
+              <div class="table-header">Book Returned</div>
+                <div class="table-header"> Returned Date</div>
+                <div class="table-header">Reserve/Approved Date</div>
+
+            </div>
+        {% for user in users_with_books%}
+            {%if user.book_approvals_status == 'Reserved':%}
+                    <div class="table-row">
+                      <div class="table-cell">{{user.username}}</div>
+                      <div class="table-cell">{{user.title}}</div>
+                      <div class="table-cell"><a class="approve_btn" href="{{url_for('approved_book',book_id=user.id)}}">Approve</a></div>
+                        <div class="table-cell">Total returned:{{reserve_books_count}}</div>
+                        <div class="table-cell">{{user.current_date}}</div>
+                    </div>
+            {%elif user.book_approvals_status == "Approve":%}
+                    <div class="table-row">
+                      <div class="table-cell">{{user.username}}</div>
+                      <div class="table-cell">{{user.title}}</div>
+                      <div class="table-cell">Approved</div>
+                      <div class="table-cell"><a class="return_btn" href="{{url_for('return_book',book_id=user.id)}}">Return</a></div>
+                      <div class="table-cell">{{user.return_date}}</div>
+                    </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% include 'footer.html' %}

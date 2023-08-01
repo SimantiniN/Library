@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Library</title>
+        <link href="../static/css/styles.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Montserrat&family=Noto+Serif+Makasar&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Merriweather&family=Montserrat&family=Noto+Serif+Makasar&family=Oswald&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Merriweather&family=Montserrat&family=Noto+Serif+Makasar&family=Oswald&family=Pacifico&family=Sacramento&display=swap" rel="stylesheet">
+     </head>
+     <body>
+        <header>
+            <nav>
+                <div class="logo">Library</div>
+                <div>
+                    <ul>
+                        <li><a href="{{url_for('home')}}">Home</a></li>
+                        {% if not logged_in %}
+                            <li><a href="{{url_for('register_user')}}">Sign Up</a></li>
+                            <li><a href="{{url_for('login')}}">Login</a></li>
+                        {% else %}
+                            <li><a href="{{url_for('logout')}}">Logout</a></li>
+                        {% endif %}
+                            <li><a href="#">Contact Us</a></li>
+
+                    </ul>
+                    {% if logged_in %}
+                        <div class="colored-element"><h3>Welcome {{current_user.username}}<h3></div>
+                    {% endif %}
+                </div>
+            </nav>
+        </header>
+
+        <section id="home">
+                <h1>Library</h1>
+        </section>
+     <section class ="reserveflashmsg">
+     {% with messages = get_flashed_messages() %}
+       {% for message in messages %}
+         <p>{{ message }}</p>
+        {% endfor %}
+   {% endwith %}
+</section>
+<section class="admin" >
+    <div class="update_book">
+        {% block adminsection%}
+        {%if current_user.id ==1%}
+            <ul>
+                <li><a href="{{url_for('add_book_details')}}">Add Book</a></li>
+                <li><a href="{{url_for('create_file',file_type='excel')}}">Generate Report</a></li>
+                <li><a href="{{url_for('book_approvals')}}">Book Approvals</a></li>
+                <li>Reserve Books : {{reserve_books_count}}</li>
+            </ul>
+        {%else%}
+        {% if logged_in: %}
+            <ul>
+                <li>Reserve Books : {{reserve_books_count}}</li>
+            </ul>
+        {% endif %}
+        {% endif %}
+        {% endblock %}
+    </div>
+</section>
+
+
+
+
+
+

@@ -1,0 +1,28 @@
+{% extends 'header.html' %}
+
+    <section id="home">
+        {% block content %}
+            <h2>WElcome</h2>
+        {% endblock %}
+    </section>
+   <section id="image_container">
+       {% for book in books:%}
+            {% if book:%}
+            <div class="book_container">
+                <div class="book_name">
+                    <img src={{book.book_image}} class="book_image" alt="{{book.book_name}}">
+                </div>
+                <div class="reservebtn">
+                    <a>Reserve Book</a>
+                </div>
+            </div>
+            {% else:%}
+                flash "No books available"
+             {% endif %}
+
+
+       {% endfor %}
+   </section>
+
+{% include 'footer.html' %}
+

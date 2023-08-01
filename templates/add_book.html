@@ -1,0 +1,22 @@
+{% include 'header.html' %}
+
+    <h2>{%block content %}Welcome {{current_user.username}}{%endblock%}</h2>
+    <section id="book_details">
+        <div class="book_details">
+            <img src="#" class="add_book_image">
+        </div>
+        <div class="update_book">
+            <ul>
+                <li><a href={{url_for('add_book')}}"">Add Book</a></li>
+                <li><a href="#">Delete Book</a></li>
+                <li><a href="#">Edit Book</a></li>
+                <li><a href="#">ReserveBook</a></li>
+            </ul>
+        </div>
+    </section>
+    <section class="Comments">
+        <h3><a href="#">Comments</a></h3>
+    </section>
+
+{% include 'footer.html' %}
+

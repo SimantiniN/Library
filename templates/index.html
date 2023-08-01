@@ -1,0 +1,21 @@
+{% include 'header.html' %}
+<section id="image_container">
+    {% for book in books %}
+        {% if book %}
+            <div class="book_container">
+                <div class="book_name">
+                    {%if logged_in%}
+                        <a href="{{url_for('add_book_review',book_id=book.id,user_id=current_user.id)}}"><img src="{{book.image}}" class="book_image" alt="{{book.title}}"></a>
+                    {% else %}
+                         <a href="{{url_for('login')}}"><img src="{{book.image}}" class="book_image" alt="{{book.title}}"></a>
+                    {%endif%}
+                </div>
+                <div class="book_title">
+                    <h3><a>{{book.title}}</a></h3>
+                </div>
+            </div>
+        {%endif%}
+    {%endfor%}
+</section>
+
+{% include 'footer.html' %}

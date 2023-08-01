@@ -1,0 +1,10 @@
+{% include 'header.html' %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+<section id="form">
+        {{wtf.quick_form(form, novalidate=True, method="POST",button_map={"submit": "primary"})}}
+</section>
+
+{% include 'footer.html' %}
+
+
