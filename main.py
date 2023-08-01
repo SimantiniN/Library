@@ -70,6 +70,8 @@ class Book(db.Model):
     title = db.Column(db.String(150))
     author = db.Column(db.String)
     image = db.Column(db.String(100), unique=False)
+
+class Book_Copies(db.Model):
     no_of_copies = db.Column(db.Integer, unique=False)
     current_date = db.Column(db.String)
     return_date = db.Column(db.String)
