@@ -1,7 +1,8 @@
 {% include 'header.html' %}
 <section id="image_container">
     {% for book in books %}
-        {% if book %}
+
+        {%if book%}
             <div class="book_container">
                 <div class="book_name">
                     {%if logged_in%}

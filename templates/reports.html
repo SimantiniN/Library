@@ -1,4 +1,8 @@
 {%include 'header.html'%}
-<h2>{{msg}} </h2>
-<section><a href="{{url_for('download')}}">Download Report</a></section>
+
+<section class="report">
+    <h2>{{msg}} </h2>
+    <br> <a href="{{url_for('download',file_type='excel')}}">Download Excel Report</a>
+    <br> <a href="{{url_for('download',file_type='pdf')}}">Download pdf Report</a>
+</section>
 {% include 'footer.html' %}

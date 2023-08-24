@@ -5,9 +5,10 @@ from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import relationship
+from sqlalchemy import create_engine, ForeignKey, text
+from sqlalchemy.orm import relationship, Session, aliased
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import RegisterForm, LoginForm, BookdetailsForm, ReviewForm
+from forms import RegisterForm, LoginForm, BookDetailsForm, ReviewForm
 import os
 from werkzeug.utils import secure_filename
 from flask_bcrypt import Bcrypt
@@ -39,9 +40,10 @@ app.config['MAIL_USERNAME'] = 'your_mail_username'
 app.config['MAIL_PASSWORD'] = 'your_mail_password'
 
 # CONNECT TO DB
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///Library.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+session = Session()
 
 # upload the image /file
 UPLOAD_FOLDER = './static/books'  # where to store uploaded files
@@ -57,38 +59,71 @@ gravatar = Gravatar(app, size=75, rating='g', default='robohash', force_default=
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(100), unique=True)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
     password = db.Column(db.String(100))
-    books = relationship("Book", back_populates="user_book")
-    user_reviews = relationship("Review", back_populates="user_review")
+    all_users_status = relationship("Book_Status", back_populates="user_status")
+    users_review = relationship("Book_Review", back_populates="user_review")
+    all_users_role = relationship("User_Role", back_populates="user_role")
+
+
+class User_Role(db.Model):
+    __tablename__ = 'users_role'
+    id = db.Column(db.Integer, primary_key=True)
+    role = db.Column(db.String(50))
+    description = db.Column(db.String(150))
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user_role = relationship("User", back_populates="all_users_role")
 
 
 class Book(db.Model):
     __tablename__ = 'books'
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(150))
-    author = db.Column(db.String)
+    sub_title = db.Column(db.String(150))
+    author = db.Column(db.String(150))
+    brand_name = db.Column(db.String(100))
+    number_of_pages = db.Column(db.Integer)
+    book_contains = db.Column(db.String(100))
+    isbn = db.Column(db.String(100), unique=True)
     image = db.Column(db.String(100), unique=False)
+    no_of_copies = db.Column(db.Integer)
+    all_book_status = relationship("Book_Status", back_populates="book_status_all")
+    book_reviews = relationship("Book_Review", back_populates='book_review')
+    book_copy = relationship("Book_Copies", back_populates="book_copies")
+
 
 class Book_Copies(db.Model):
-    no_of_copies = db.Column(db.Integer, unique=False)
-    current_date = db.Column(db.String)
-    return_date = db.Column(db.String)
+    __tablename__ = 'book_copies'
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey(Book.id))
+    book_copies = relationship("Book", back_populates="book_copy")
+    remaining_copies = db.Column(db.Integer, unique=False)
+    # book_avialabity
+
+
+class Book_Status(db.Model):
+    __tablename__ = 'books_status'
+    id = db.Column(db.Integer, primary_key=True)
     book_approvals_status = db.Column(db.String(50))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user_book = relationship("User", back_populates="books")
-    book_reviews = relationship("Review", back_populates="book_review")
+    reserve_book_date = db.Column(db.String)
+    approve_book_date = db.Column(db.String)
+    return_book_date = db.Column(db.String)
+    book_id = db.Column(db.Integer, db.ForeignKey(Book.id))
+    book_status_all = relationship("Book", back_populates="all_book_status")
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user_status = relationship("User", back_populates="all_users_status")
 
 
-class Review(db.Model):
-    __tablename__ = "review"
+class Book_Review(db.Model):
+    __tablename__ = "book_review"
     id = db.Column(db.Integer, primary_key=True)
     review_text = db.Column(db.Text, nullable=False)
-    book_id = db.Column(db.Integer, db.ForeignKey("books.id"))
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user_review = relationship("User", back_populates="user_reviews")
+    book_id = db.Column(db.Integer, db.ForeignKey(Book.id))
     book_review = relationship("Book", back_populates="book_reviews")
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id))
+    user_review = relationship("User", back_populates="users_review")
 
 
 with app.app_context():
@@ -101,7 +136,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(user_id)
+    return db.session.query(User).get(user_id)  # User.query.get(user_id)
 
 
 # admin permission
@@ -128,10 +163,11 @@ def allowed_file(filename):
 
 
 # @app.route("/reserve_book_count/<int:user_id>")
-@login_required
+# @login_required
 def reserve_books_count(user_id):
     # if current_user.is_authenticated:
-    total_reserve_books = Book.query.filter(Book.user_id == user_id).count()
+    # total_reserve_books =db.session.query(Book_Status)
+    total_reserve_books = db.session.query(Book_Status).filter(Book_Status.user_id == user_id).count()
     if not total_reserve_books:
         flash("Currently no books reserve from you!Hurry UP!!\n")
         return 0
@@ -145,7 +181,10 @@ def reserve_books_count(user_id):
 def home():
     total_reserve_books = 0
     current_date = dt.datetime.today().strftime("%B %d,%Y")
-    book_data = Book.query.all()
+    book_data = db.session.query(Book).all()
+
+    # total_book_copies = db.session.query(Book_Copies).all()
+
     if not book_data:
         flash("Contact Admin no books are currently available.\n")
     if current_user.is_authenticated:
@@ -156,7 +195,7 @@ def home():
     # else:
     #     total_reserve_books = 0
     return render_template("index.html", date=current_date, books=book_data, reserve_books_count=total_reserve_books,
-                           logged_in=current_user.is_authenticated)
+                           logged_in=current_user.is_authenticated)  # , total_book_copies=total_book_copies)
 
 
 @app.route('/register_user', methods=['GET', 'POST'])
@@ -174,7 +213,8 @@ def register_user():
         #     salt_length=8
         # )
         new_user = User()
-        new_user.username = registration_form.username.data
+        new_user.first_name = registration_form.firstname.data
+        new_user.last_name = registration_form.lastname.data
         new_user.email = registration_form.email.data
         new_user.password = hash_and_salted_password
         db.session.add(new_user)
@@ -217,7 +257,7 @@ def add_book():
 def add_book_details():
     book_exist = False
     books = Book.query.all()
-    book_form = BookdetailsForm()
+    book_form = BookDetailsForm()
     if book_form.validate_on_submit():
         for book in books:
             if book.title == book_form.title.data.title():
@@ -237,36 +277,68 @@ def add_book_details():
             file_url = url_for('get_file', filename=filename)
             book = Book()
             book.title = book_form.title.data.title()
+            book.sub_title = book_form.subtitle.data
             book.author = book_form.author.data
+            book.brand_name = book_form.brand_name.data
+            book.number_of_pages = book_form.number_of_pages.data
+            book.book_contains = book_form.book_contains.data
+            book.isbn = book_form.isbn.data
             book.image = file_url
             book.no_of_copies = book_form.no_of_copies.data
-            book.current_date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
             db.session.add(book)
+            db.session.commit()
+            bs = Book_Status()
+            total_book_copies = Book_Copies()
+            total_book_copies.book_id = book.id
+            if book.no_of_copies > 0:
+                bs = Book_Status()
+                bs.book_id = book.id
+                # bs.user_id = current_user.id
+                bs.book_approvals_status = "Available"
+                total_book_copies.remaining_copies = book.no_of_copies
+            else:
+                total_book_copies.remaining_copies = 0
+                total_book_copies.book_id = book.id
+                bs.book_approvals_status = "Waiting"
+            db.session.add(bs)
+            db.session.add(total_book_copies)
             db.session.commit()
             return redirect(url_for('home'))
     return render_template('add_book_details.html', form=book_form, logged_in=current_user.is_authenticated)
 
 
+# @app.route("/book-status/<int:book_id>")
+# @login_required
+# def book_status(book_id):
 @app.route("/book_review/<int:book_id>", methods=['GET', 'POST'])
 @login_required
 def add_book_review(book_id):
     review_form = ReviewForm()
-    requested_book = Book.query.get(book_id)
+    try:
+        book = db.session.query(Book.id, Book.image, Book_Status.book_approvals_status).join(Book_Status).filter(
+            Book_Status.book_id == book_id).first()
+        if book is None:
+            # Handle the case where the book with the given ID doesn't exist
+            return "Book not found", 404
+        if review_form.validate_on_submit():
+            if not current_user.is_authenticated:
+                flash("You need to login or register to comment.\n")
+                return redirect(url_for("login"))
+            new_review = Review(
+                review_text=review_form.review_text.data,
+                # book_id = book_id,
+                # user_id =current_user.id,
+                user_review=current_user,
+                book_review=requested_book
+            )
+            db.session.add(new_review)
+            db.session.commit()
 
-    if review_form.validate_on_submit():
-        if not current_user.is_authenticated:
-            flash("You need to login or register to comment.\n")
-            return redirect(url_for("login"))
-        new_review = Review(
-            review_text=review_form.review_text.data,
-            # book_id = book_id,
-            # user_id =current_user.id,
-            user_review=current_user,
-            book_review=requested_book
-        )
-        db.session.add(new_review)
-        db.session.commit()
-    return render_template("book_reviews.html", book=requested_book, form=review_form, current_user=current_user,
+    except Exception as e:
+        db.session.rollback()
+
+    return render_template("book_reviews.html", book=book, form=review_form,
+                           current_user=current_user,
                            logged_in=current_user.is_authenticated)
 
 
@@ -274,8 +346,8 @@ def add_book_review(book_id):
 @login_required
 @admin_only
 def edit_book(book_id):
-    book_to_edit = db.get_or_404(Book, book_id)
-    edit_form = BookdetailsForm(
+    book_to_edit = db.session.get_or_404(Book, book_id)
+    edit_form = BookDetailsForm(
 
         title=book_to_edit.title,
         author=book_to_edit.author
@@ -306,6 +378,8 @@ def edit_book(book_id):
 @admin_only
 def delete_book(book_id):
     book_to_delete = Book.query.get(book_id)
+    bs = Book_Status()
+    bs.book_approvals_status = "Not available"
     db.session.delete(book_to_delete)
     db.session.commit()
     return redirect(url_for('home'))
@@ -314,48 +388,87 @@ def delete_book(book_id):
 @app.route("/reserve_book/<int:book_id>")
 @login_required
 def reserve_book(book_id):
-    book = Book.query.get(book_id)
-    # total_reserve_books = Book.query.filter(Book.user_id == current_user.id).count()
-    # if book.no_of_copies <= 5:
-    if not book:
-        flash('Book not found!\n', 'error')
-        # return redirect((url_for('home')))
-    elif book.book_approvals_status == 'Reserved':
-        flash('Book is already reserved!\n', 'error\n')
-        # return redirect((url_for('home')))
-    elif book.book_approvals_status == 'Approve':
-        flash('Book is already Approved!\n', 'error\n')
+    book, book_status, book_copies = db.session.query(Book, Book_Status, Book_Copies).join(Book_Status).join(
+        Book_Copies).filter(Book.id == book_id).first()
 
+    if book_copies.remaining_copies > 0:
+        if not book:
+            flash('Book not found!\n', 'error')
+            return redirect((url_for('home')))
+        elif book_status.book_approvals_status == 'Reserved' and book_status.user_id == current_user.id:
+            flash('Book is already reserved!\n', 'error\n')
+            return redirect((url_for('home')))
+        elif book_status.book_approvals_status == 'Approved' and book_status.user_id == current_user.id:
+            flash('Book is already Approved!\n', 'error\n')
+        else:
+            if book_status.book_approvals_status == "Available":
+                book_status.book_approvals_status = "Reserved"
+                book_copies.remaining_copies = book_copies.remaining_copies - 1
+                book_status.reserve_book_date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                book_status.user_id = current_user.id
+            else:
+                if book_status.book_approvals_status == "Reserved" and book_status.user_id != current_user.id:
+                    book_status.book_approvals_status = "Reserved"
+                    different_user_book_status = Book_Status(book_id=book.id, user_id=current_user.id,
+                                                             reserve_book_date=dt.datetime.now().strftime(
+                                                                 "%m/%d/%Y, %H:%M:%S"),
+                                                             book_approvals_status="Reserved")
+                    db.session.add(different_user_book_status)
+                    book_copies.remaining_copies = book_copies.remaining_copies - 1
+                    book_status.reserve_book_date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
+                    book_status.user_id = current_user.id
+
+            db.session.commit()
+            flash(f'Book "{book.title}" reserved successfully!\n', 'success\n')
     else:
-        book.book_approvals_status = "Reserved"
-        book.user_id = current_user.id
-        db.session.commit()
-    flash(f'Book "{book.title}" reserved successfully!\n', 'success\n')
+        if not book_status.book_approvals_status == "Approved":
+            different_user_book_status = Book_Status(book_id=book.id, user_id=current_user.id,
+                                                     reserve_book_date=dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+                                                     book_approvals_status="Waiting")
+            db.session.add(different_user_book_status)
+            book_status.user_id = current_user.id
+            db.session.commit()
+            flash('Currently not available !!You are in In waiting list')
     # else:
-    #     flash('You are in In waiting list')
-
-    # return redirect(url_for('book_list'))
-
+    #     if book_status.book_approvals_status== "Available":
+    #         book_status.book_approvals_status = "Reserved"
+    #         total_book_copies.remaining_copies = total_book_copies.remaining_copies - 1
+    #         # book_copies_count = Book_Copies()
+    #         # book_copies_count.remaining_copies = total_book_count
+    #         book.user_id = current_user.id
+    #         db.session.commit()
+    #         flash(f'Book "{book_details.title}" reserved successfully!\n', 'success\n')
+    # # except Exception as e:
+    # #     db.session.rollback()
     return redirect((url_for('home')))
 
 
 @app.route('/dereserve_book/<int:book_id>/<int:user_id>')
 @login_required
 def dereserve_book(book_id, user_id):
-    book = Book.query.filter_by(id=book_id).first()
+    book = db.session.query(Book.title, Book_Status.book_approvals_status, Book_Status.user_id, Book_Status.book_id,
+                            Book_Copies.remaining_copies). \
+        join(Book_Status).join(Book_Copies). \
+        filter(Book.id == book_id).first()
+    if book.book_approvals_status == 'Reserved' and book.user_id == current_user.id:
+        query = text(
+            "UPDATE books_status "
+            "SET book_approvals_status = 'Available', user_id = :new_user_id ,reserve_book_date=''"
+            "WHERE id = :book_id AND user_id = :user_id AND book_approvals_status = 'Reserved'")
+
+
+        if book.book_approvals_status == 'Reserved' and book.user_id == current_user.id:
+            book.book_approvals_status = "Available"
+            Book_Status.user_id = ""
+        db.session.execute(query, {"book_id": book_id, "user_id": user_id, "new_user_id": " "})
+        db.session.commit()
+    flash(f'Book "{book.title}" dereserved successfully!\n', 'success\n')
+    # else:
+    #     flash('Book is approve So cannot dereserve!\n', 'error\n')
+
     if book is None:
         flash('Book not found!\n', 'error\n')
-    if not book.book_approvals_status == 'Reserved':
-        flash('Book is already reserved!\n', 'error\n')
-    if not book.book_approvals_status == 'Approve':
-        flash('Book is already reserved!\n', 'error\n')
 
-    if book.user_id == user_id:
-        book.book_approvals_status = 'Available'
-        book.user_id = ""
-        db.session.commit()
-        flash(f'Book "{book.title}" de-reserved successfully!\n', 'success\n')
-    flash('Book is already reserved!\n', 'error\n')
     return redirect((url_for('home')))
 
 
@@ -363,9 +476,11 @@ def dereserve_book(book_id, user_id):
 @login_required
 @admin_only
 def book_approvals():
-    # users_with_books = db.session.query(User.username, Book.title, Book.id).join(Book).all()
-    users_with_books = db.session.query(User.username, Book.id, Book.title, Book.book_approvals_status,
-                                        Book.return_date, Book.current_date).join(Book).all()
+    bs = aliased(Book_Status, name='bs')
+    users_with_books = db.session.query(User.first_name, Book.id, Book.title, bs.book_approvals_status,
+                                        bs.return_book_date, bs.approve_book_date).join(
+        Book).join(User).filter(bs.book_id == Book.id).all()
+
     total_reserve_books = reserve_books_count(current_user.id)
     if not users_with_books:
         flash('No books are available to reserved!!')
@@ -377,21 +492,20 @@ def book_approvals():
 @login_required
 @admin_only
 def approved_book(book_id):
-    approved_status = Book.query.filter_by(id=book_id).first()
+    approved_status = db.session.query(Book_Status).filter_by(id=book_id).first()
     if approved_status.book_approvals_status == 'Reserved':
-        approved_status.book_approvals_status = "Approve"
+        approved_status.book_approvals_status = "Approved"
         current_date = dt.datetime.now().strftime("%m/%d/%Y, %H:%M:%S")
-        approved_status.current_date = current_date
+        approved_status.approve_book_date = current_date
         approve_date = dt.datetime.strptime(current_date, "%m/%d/%Y, %H:%M:%S")
-        approved_status.return_date = str(approve_date + dt.timedelta(days=7))
-        approved_status.no_of_copies = approved_status.no_of_copies - 1
+        approved_status.return_book_date = str(approve_date + dt.timedelta(days=7))
         db.session.commit()
-
-        flash(f'Approved!!return your book on {approved_status.return_date}')
-
+        flash(f'Approved!!return your book on {approved_status.return_book_date}')
         return redirect(url_for('book_approvals'))
 
     else:
+        total_book_copies = Book_Copies()
+        total_book_copies.remaining_copies = Book.no_of_copies
         flash("flash('No books reserved!!')")
         return redirect(url_for('home'))
 
@@ -400,11 +514,11 @@ def approved_book(book_id):
 @login_required
 @admin_only
 def return_book(book_id):
-    return_book_status = Book.query.filter_by(id=book_id).first()
-    if return_book_status.book_approvals_status == 'Approve':
-        return_book_status.book_approvals_status = "Available"
-        return_book_status.return_date = ""
-        return_book_status.no_of_copies = return_book_status.no_of_copies + 1
+    return_bs = db.session.query(Book_Status).filter_by(id=book_id).first()
+    if return_bs.book_approvals_status == 'Approved':
+        return_bs.book_approvals_status = "Available"
+        return_bs.return_date = ""
+        return_bs.no_of_copies = return_bs.no_of_copies + 1
         db.session.commit()
         flash(f'Returned')
         return redirect(url_for('book_approvals'))
@@ -513,3 +627,5 @@ if __name__ == "__main__":
 #
 # # Save the workbook
 # workbook.close()
+# <p>Debug: book = {{ book }}</p>
+# <p>Debug: book_approvals_status = {{ book.book_approvals_status }}</p>

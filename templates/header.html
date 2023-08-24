@@ -32,7 +32,7 @@
 
                     </ul>
                     {% if logged_in %}
-                        <div class="colored-element"><h3>Welcome {{current_user.username}}<h3></div>
+                        <div class="colored-element"><h3>{{current_user.first_name }}   {{ current_user.last_name  }}<h3></div>
                     {% endif %}
                 </div>
             </nav>
@@ -44,26 +44,23 @@
      <section class ="reserveflashmsg">
      {% with messages = get_flashed_messages() %}
        {% for message in messages %}
-         <p>{{ message }}</p>
+         {{ message }}<br>
         {% endfor %}
    {% endwith %}
 </section>
 <section class="admin" >
     <div class="update_book">
         {% block adminsection%}
-        {%if current_user.id ==1%}
-            <ul>
-                <li><a href="{{url_for('add_book_details')}}">Add Book</a></li>
-                <li><a href="{{url_for('create_file',file_type='excel')}}">Generate Report</a></li>
-                <li><a href="{{url_for('book_approvals')}}">Book Approvals</a></li>
-                <li>Reserve Books : {{reserve_books_count}}</li>
-            </ul>
-        {%else%}
         {% if logged_in: %}
             <ul>
+                {%if current_user.id ==1%}
+                    <li><a href="{{url_for('add_book_details')}}">Add Book</a></li>
+                    <li><a href="{{url_for('create_file',file_type='excel')}}">Generate Report</a></li>
+                    <li><a href="{{url_for('book_approvals')}}">Book Approvals</a></li>
+                {% endif %}
+                <li>Loan : {{reserve_books_count}}</li>
                 <li>Reserve Books : {{reserve_books_count}}</li>
             </ul>
-        {% endif %}
         {% endif %}
         {% endblock %}
     </div>

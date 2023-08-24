@@ -22,6 +22,7 @@ nav ul{
 nav ul li{
   display: inline-block;
   margin-left: 30px;
+  list-style-type: none;
 }
 nav ul li a{
   
@@ -38,7 +39,8 @@ color:#5DE3A4;
  
 }
 .colored-element{
-color:#5DE3A4
+color:#FDCEDF
+
 }
 nav::before{
   content: "";
@@ -173,15 +175,19 @@ height: 400px;
 width:300px
 }
 .update_book ul li{
-display: inline;
+display: inline-block;
 list-style: none;
 margin-bottom:20px;
 margin-top: 20px;
 margin-left: 20px;
+color: #a6216a;
 }
 .update_book ul li a{
 color: #a6216a;
 text-decoration: none;
+list-style: none;
+
+
 }
 .update_book ul li a:hover{
 
@@ -257,13 +263,13 @@ text-align: center;
 }
 
 
-.reservebtn{
+/* .reservebtn{
   display: flex;
   flex-direction: row;
   gap:1rem;
   margin-top: 10px;
   /* background: white; */
-  background: #a6216a;
+ /* background: #a6216a;
   background-image: -webkit-linear-gradient(top, #a6216a, #a6216a);
   background-image: -moz-linear-gradient(top, #a6216a, #a6216a);
   background-image: -ms-linear-gradient(top, #a6216a, #a6216a);
@@ -289,7 +295,7 @@ text-align: center;
   background-image: -o-linear-gradient(top, #d4b0c2, #d4b0c2);
   background-image: linear-gradient(to bottom, #d4b0c2, #d4b0c2);
   text-decoration: none;
-}
+}*/
 .deletebtn{
   width: 50px;
 }
@@ -319,6 +325,11 @@ flex-direction:row;
 justify-content: center;
 align-items: center;
 background-color: #ccc;
+list-style: none;
+
+text-decoration: none;
+
+
 }
 .reserveflashmsg{
 position: relative;
@@ -334,7 +345,9 @@ align-items: center;
 .review_gravator
 {
 position: relative;
-top: 500px;
+top: 200px;
+height:20px;
+width:auto;
 font-family: 'Noto Serif Makasar', serif;
 color:black;
 display: flex;
@@ -403,6 +416,15 @@ book_aproval_table-container{
 
 }
 
+.report{
+    position: relative;
+  top:250px;
+  display: flex;
 
+  flex-direction: column;
+  border: 1px solid #ccc;
+  justify-content: flex-start;
+  align-items: center;
+}
 
 
