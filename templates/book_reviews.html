@@ -33,12 +33,11 @@
 <div>
     {% for review in reviews %}
         <br>
-        <img src="{{ current_user.email | gravatar }}"/>
-        {{review.review_text}}
+        <img src="{{ current_user.email | gravatar }}"> {{review.review_text}}
 
     {% endfor %}
 </div>
 </section>
 
 {% include 'footer.html' %}
-{%  endblock %}
+{% endblock %}

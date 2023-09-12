@@ -2,7 +2,12 @@
 
 <section class="report">
     <h2>{{msg}} </h2>
-    <br> <a href="{{url_for('download',file_type='excel')}}">Download Excel Report</a>
-    <br> <a href="{{url_for('download',file_type='pdf')}}">Download pdf Report</a>
+    {% if filetype =='excel'%}
+         <br><a href="{{url_for('download',file_type='excel')}}">Download Excel Report</a>
+    {%else%}
+       <br> <a href="{{url_for('download',file_type='pdf')}}">Download pdf Report</a>
+
+
+    {%endif%}
 </section>
 {% include 'footer.html' %}

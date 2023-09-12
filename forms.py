@@ -34,12 +34,12 @@ class BookDetailsForm(FlaskForm):
     title = StringField("Title: ", validators=[DataRequired()], render_kw={"placeholder": "Title"})
     subtitle = StringField("SubTitle: ", validators=[DataRequired()], render_kw={"placeholder": "Subtitle"})
     author = StringField("Author: ", validators=[DataRequired()], render_kw={"placeholder": "Author"})
-    brand_name = StringField("Brand_name: ", validators=[DataRequired()], render_kw={"placeholder": "Brand_name:"})
+    brand_name = StringField("Publisher: ", validators=[DataRequired()], render_kw={"placeholder": "Publisher_name:"})
     number_of_pages = StringField("Number_of_pages: ", validators=[DataRequired()],
                                   render_kw={"placeholder": "Number_of_pages"})
     book_contains = StringField("Book_contains: ", validators=[DataRequired()],
                                 render_kw={"placeholder": "Book_contains"})
-    isbn = StringField("ISBN: ", validators=[DataRequired()], render_kw={"placeholder": "Author"})
+    isbn = StringField("ISBN: ", validators=[DataRequired()], render_kw={"placeholder": "isbn"})
     no_of_copies = StringField("no_of_copies: ", validators=[DataRequired()])
     image = FileField("Upload Image: ", validators=[FileRequired(),
                                                     FileAllowed(['jpg', 'png', 'jpeg'], 'Images only!')],

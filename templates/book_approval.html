@@ -15,7 +15,7 @@
                     <div class="table-row">
                       <div class="table-cell">{{users_with_book.first_name}}</div>
                       <div class="table-cell">{{users_with_book.title}}</div>
-                      <div class="table-cell"><a class="approve_btn" href="{{url_for('approved_book',book_id=users_with_book.id,user_id=users_with_book.user_id)}}">Reserve</a></div>
+                      <div class="table-cell"><a class="approve_btn" href="{{url_for('approved_book',book_id=users_with_book.id,user_id=users_with_book.user_id)}}">Approve</a></div>
                         <div class="table-cell">Total returned:{{reserve_books_count}}</div>
                         <div class="table-cell">{{users_with_book.return_book_date}}</div>
                         <div class="table-cell">{{users_with_book.reserve_book_date}}</div>
