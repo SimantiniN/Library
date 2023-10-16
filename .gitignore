@@ -1,0 +1,7 @@
+.idea
+static/reports
+output.pdf
+Librarysqlachmy.db
+python_files/test_reserve_book.py
+static/reports/book_database.xlsx
+
